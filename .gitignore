@@ -12,6 +12,10 @@
 /.next/
 /out/
 
+/media/
+
+yarn.lock*
+
 # production
 /build
 
