@@ -11,7 +11,7 @@ import {
   sanitizeServerEditorConfig,
   type SerializedBlockNode,
 } from '@payloadcms/richtext-lexical'
-import { fetchDocs } from '@root/scripts/fetchDocs'
+import { fetchSingleDoc } from '@root/scripts/fetchDocs'
 import { topicGroupsToDocsData } from '@root/scripts/syncDocs'
 import { revalidatePath } from 'next/cache'
 
@@ -67,10 +67,17 @@ export const Docs: CollectionConfig = {
           default: {
             actions: ['@root/collections/Docs/BranchButton#BranchButton'],
           },
+          livePreview: {
+            actions: ['@root/collections/Docs/BranchButton#BranchButton'],
+          },
         },
       },
     },
     defaultColumns: ['path', 'topic', 'slug', 'title'],
+    livePreview: {
+      url: ({ collectionConfig, data, locale }) =>
+        `${process.env.NEXT_PUBLIC_CMS_URL}/docs/${data.path}`,
+    },
     useAsTitle: 'path',
   },
   fields: [
@@ -183,7 +190,8 @@ export const Docs: CollectionConfig = {
   ],
   hooks: {
     afterRead: [
-      async ({ doc, findMany, req }) => {
+      async ({ doc: _doc, findMany, req }) => {
+        const doc: Doc = _doc
         if (findMany) {
           return doc
         }
@@ -204,16 +212,25 @@ export const Docs: CollectionConfig = {
           branch = version === 'v2' ? '2.x' : 'main'
         }
 
-        const topicGroups = await fetchDocs({ ref: branch, version })
+        const topicGroup = await fetchSingleDoc({
+          docFilename: doc.slug + '.mdx',
+          ref: branch,
+          topicGroupLabel: doc.topicGroup,
+          topicSlug: doc.topic,
+          version,
+        })
 
-        const { docsData } = await topicGroupsToDocsData({ req, topicGroups, version })
+        if (!topicGroup) {
+          throw new Error('Failed to fetch topic group - topic group not found')
+        }
 
-        const curDoc = docsData.find(
-          (searchDoc) =>
-            searchDoc.slug === doc.slug &&
-            searchDoc.topic === doc.topic &&
-            searchDoc.version === doc.version,
-        )
+        const { docsData } = await topicGroupsToDocsData({
+          req,
+          topicGroups: [topicGroup],
+          version,
+        })
+
+        const curDoc = docsData[0]
 
         return curDoc
       },
