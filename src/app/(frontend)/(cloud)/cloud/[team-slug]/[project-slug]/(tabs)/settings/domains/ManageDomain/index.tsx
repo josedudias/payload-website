@@ -2,11 +2,13 @@ import type { Project, Team } from '@root/payload-cloud-types.js'
 
 import { Accordion } from '@components/Accordion/index.js'
 import { Button } from '@components/Button/index.js'
+import { CopyToClipboard } from '@components/CopyToClipboard'
 import { Heading } from '@components/Heading/index.js'
 import { ModalWindow } from '@components/ModalWindow/index.js'
 import { useModal } from '@faceless-ui/modal'
 import { ExternalLinkIcon } from '@root/icons/ExternalLinkIcon/index.js'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
 import classes from './index.module.scss'
@@ -23,11 +25,11 @@ type Props = {
 export const ManageDomain: React.FC<Props> = ({ domain, environmentSlug, project, team }) => {
   const { id, domain: domainURL, recordContent, recordName, recordType } = domain
   const modalSlug = `delete-domain-${id}`
+  const router = useRouter()
 
   const { closeModal, openModal } = useModal()
   const projectID = project?.id
-  const projectDomains = project?.domains
-  const cnameRecord = project?.defaultDomain
+  const [projectDomains, setProjectDomains] = React.useState(project?.domains || [])
 
   const patchDomains = React.useCallback(
     async (domains: Props['domain'][]) => {
@@ -46,20 +48,19 @@ export const ManageDomain: React.FC<Props> = ({ domain, environmentSlug, project
           },
         )
 
-        // TODO: alert user based on status code & message
-
         if (req.status === 200) {
           const res = await req.json()
-          // reloadProject()
+          router.refresh()
+          setProjectDomains(domains)
           return res
         }
       } catch (e) {
-        console.error(e) // eslint-disable-line no-console
+        console.error(e)
       }
 
       return null
     },
-    [projectID],
+    [projectID, environmentSlug],
   )
 
   const deleteDomain = React.useCallback(async () => {
@@ -87,22 +88,34 @@ export const ManageDomain: React.FC<Props> = ({ domain, environmentSlug, project
       >
         <div className={classes.domainContent}>
           <p>Add the following record to your DNS provider:</p>
-          <table className={classes.record}>
-            <thead>
-              <tr>
-                <th>Type</th>
-                <th>Name</th>
-                <th>Content</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>{recordType}</td>
-                <td>{recordName}</td>
-                <td>{recordContent}</td>
-              </tr>
-            </tbody>
-          </table>
+          <div className={classes.tableContainer}>
+            <table className={classes.record}>
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Name</th>
+                  <th>Content</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{recordType}</td>
+                  <td>
+                    <span>
+                      {recordName}
+                      {recordName && <CopyToClipboard value={recordName} />}
+                    </span>
+                  </td>
+                  <td>
+                    <span>
+                      {recordContent}
+                      {recordContent && <CopyToClipboard value={recordContent} />}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
           <div className={classes.domainActions}>
             <div className={classes.rightActions}>
               <Button appearance="danger" label="Delete" onClick={() => openModal(modalSlug)} />

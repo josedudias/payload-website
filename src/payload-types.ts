@@ -5160,6 +5160,7 @@ export interface Doc {
   label?: string | null;
   order?: number | null;
   version: string;
+  mdx?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -6409,6 +6410,7 @@ export interface DocsSelect<T extends boolean = true> {
   label?: T;
   order?: T;
   version?: T;
+  mdx?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -13676,6 +13678,17 @@ export interface BrBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'br';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "VideoDrawerBlock".
+ */
+export interface VideoDrawerBlock {
+  id: string | null;
+  label: string;
+  drawerTitle: string;
+  blockName?: string | null;
+  blockType: 'VideoDrawer';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

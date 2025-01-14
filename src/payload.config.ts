@@ -27,6 +27,7 @@ import { CommunityHelp } from './collections/CommunityHelp'
 import { Docs } from './collections/Docs'
 import { BannerBlock } from './collections/Docs/blocks/banner'
 import { CodeBlock } from './collections/Docs/blocks/code'
+import { VideoDrawerBlock } from './collections/Docs/blocks/VideoDrawer'
 import { Media } from './collections/Media'
 import { Pages } from './collections/Pages'
 import { Budgets, Industries, Regions, Specialties } from './collections/PartnerFilters'
@@ -39,7 +40,7 @@ import { GetStarted } from './globals/GetStarted'
 import { MainMenu } from './globals/MainMenu'
 import { PartnerProgram } from './globals/PartnerProgram'
 import redeployWebsite from './scripts/redeployWebsite'
-import { syncDocs } from './scripts/syncDocs'
+import { refreshMdxToLexical, syncDocs } from './scripts/syncDocs'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -173,6 +174,7 @@ export default buildConfig({
 
             interfaceName: 'BrBlock',
           },
+          VideoDrawerBlock,
           {
             slug: 'commandLine',
             fields: [
@@ -245,6 +247,11 @@ export default buildConfig({
       handler: redeployWebsite,
       method: 'post',
       path: '/redeploy/website',
+    },
+    {
+      handler: refreshMdxToLexical,
+      method: 'get',
+      path: '/refresh/mdx-to-lexical',
     },
   ],
   globals: [Footer, MainMenu, GetStarted, PartnerProgram],
